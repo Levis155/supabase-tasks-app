@@ -18,7 +18,7 @@ type Task = {
   };
 
 interface TaskCardProps{
-    taskId:string
+    to:string
     taskTitle:string
     taskDescription:string
     completed:boolean
@@ -119,7 +119,6 @@ function TaskCardsContainer() {
     setIsLoading(false);
 
     if (error) {
-      console.log(error.message);
       setError(error.message); 
       return;
     }
@@ -133,13 +132,11 @@ function TaskCardsContainer() {
     fetchTasks();
   }, []);
 
-  if (isLoading) {
-    return <h1>Loading...</h1>;
-  }
+  {isLoading && <h1>Loading...</h1>}
 
-  if (error) {
-    return <h1>Error: {error}</h1>;
-  }
+  {error && <h1>{error}</h1>}
+
+  {tasks.length===0 && <h1>No remaining tasks</h1>}
 
   if(tasks.length > 0) {
     return(
@@ -154,7 +151,7 @@ function TaskCardsContainer() {
   
         <div className="task-cards">
             {
-                tasks.map(item => <TaskCard taskId={item.id} taskTitle={item.title} taskDescription={item.description} completed={item.completed} />)
+                tasks.map(item => <TaskCard to={`update-task/${item.id}`} taskTitle={item.title} taskDescription={item.description} completed={item.completed} />)
             }
         </div>
       </div>
@@ -163,20 +160,20 @@ function TaskCardsContainer() {
 
 }
 
-function TaskCard({taskId, taskTitle, taskDescription, completed} : TaskCardProps) {
+function TaskCard({to, taskTitle, taskDescription, completed} : TaskCardProps) {
   return (
     <div className="task-card">
       <div className="task-card-title-buttons">
         <h3 className={completed ? "task-card-title-complete" : "task-card-title"}>{taskTitle}</h3>
 
         <div className="task-card-buttons">
-          <button>
+          <Link to={to}>
             <CiEdit
               data-tooltip-id="my-tooltip"
               data-tooltip-content="edit task"
               className="edit-svg"
             />
-          </button>
+          </Link>
 
           <button>
           {completed ? <MdOutlinePendingActions data-tooltip-id="my-tooltip" data-tooltip-content="mark as pending" className="pending-svg" /> : <GiCheckMark data-tooltip-id="my-tooltip" data-tooltip-content="mark as complete" className="check-svg" />}

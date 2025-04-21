@@ -48,3 +48,7 @@ textarea::placeholder, input::placeholder{
     background-color: var(--purple-color);
     cursor: pointer;
 }
+.edit-form-container button:disabled{
+    background-color: lightgray;
+    color: white;
+}
