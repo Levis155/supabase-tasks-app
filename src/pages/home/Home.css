@@ -1,0 +1,172 @@
+.intro-section{
+    padding: 2rem 0rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.greeting-text{
+    color: var(--purple-color);
+    text-transform: capitalize;
+}
+
+.info-text{
+    color: var(--white-color);
+    text-transform: capitalize;
+}
+.form-container{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-container input, textarea, .form-container button{
+    width: 50rem;
+    height: 4.5rem;
+    padding: 1rem;
+    font-size: 1.9rem;
+    border: 1px solid var(--purple-color);
+    outline: none;
+    color: var(--white-color);
+    font-family: var(--primary-font);
+}
+
+.form-container input{
+    background-color: transparent;
+}
+
+textarea{
+    resize: vertical;
+    background-color: transparent;
+}
+
+textarea::placeholder, input::placeholder{
+    text-transform: capitalize;
+    font-size: 1.5rem;
+    color: var(--gray-light);
+    font-family: var(--primary-font);
+}
+
+.form-container button{
+    text-transform: capitalize;
+    background-color: var(--purple-color);
+    cursor: pointer;
+}
+.task-cards-container{
+    padding: 1rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: var(--black-light);
+}
+.task-cards-title-btn{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--gray-dark);
+    padding: 2rem 0rem;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+.task-cards-title{
+    text-transform: capitalize;
+    color: var(--purple-color);
+}
+.task-cards-button{
+    background-color: transparent;
+    color: var(--purple-color);
+    border: 1px solid var(--purple-color);
+    text-transform: uppercase;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    font-family: var(--primary-font);
+}
+.task-cards{
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+.task-card{
+    background-color: var(--black-color);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    width: 40rem;
+    height: 20rem;
+    border-radius: 2rem;
+}
+.task-card-title-buttons{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.task-card-title, .task-card-title-complete{
+    color: var(--white-color);
+    text-transform: capitalize;
+}
+.task-card-title-complete{
+    text-decoration: line-through;
+    text-decoration-thickness: 3px;
+}
+.task-card-buttons{
+    display: flex;
+    gap: 2rem;
+}
+
+.task-card-buttons button{
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    cursor: pointer;
+}
+.delete-svg{
+    font-size: 2.2rem;
+    color: red;
+}
+
+.check-svg{
+    font-size: 2.2rem;
+    color: green;
+}
+
+.pending-svg, .edit-svg{
+    color: var(--purple-color);
+    font-size: 2.2rem;
+}
+.status{
+    color: var(--gray-light);
+    text-transform: capitalize;
+    padding: 1rem 0rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--gray-dark);
+}
+
+.span-incomplete{
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--yellow-color);
+}
+
+.span-complete{
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--green-color);
+}
+
+.description-complete{
+    color: var(--gray-light);
+    text-decoration: line-through;
+    text-decoration-thickness: 3px;
+}
+
+.description-incomplete{
+    color: var(--gray-light);
+}

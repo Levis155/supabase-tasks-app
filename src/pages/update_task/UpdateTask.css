@@ -1,0 +1,50 @@
+.update-task-section{
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+.update-task-title{
+    color: var(--white-color);
+    text-transform: capitalize;
+}
+.edit-form-container{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.edit-form-container input, textarea, .edit-form-container button{
+    width: 50rem;
+    height: 4.5rem;
+    padding: 1rem;
+    font-size: 1.9rem;
+    border: 1px solid var(--purple-color);
+    outline: none;
+    color: var(--white-color);
+    font-family: var(--primary-font);
+}
+
+.edit-form-container input{
+    background-color: transparent;
+}
+
+textarea{
+    resize: vertical;
+    background-color: transparent;
+}
+
+textarea::placeholder, input::placeholder{
+    text-transform: capitalize;
+    font-size: 1.5rem;
+    color: var(--gray-light);
+    font-family: var(--primary-font);
+}
+
+.edit-form-container button{
+    text-transform: capitalize;
+    background-color: var(--purple-color);
+    cursor: pointer;
+}

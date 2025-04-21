@@ -1,0 +1,27 @@
+:root {
+  --purple-color: rgb(139, 140, 177);
+  --black-color: rgb(25, 28, 33);
+  --black-light: rgb(37, 40, 45);
+  --green-color: green;
+  --yellow-color: yellow;
+  --white-color: white;
+  --gray-light: rgb(175, 174, 174);
+  --gray-dark: rgb(88, 88, 88);
+  --primary-font: "Work Sans", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 62.5%;
+}
+
+body {
+  font-size: 1.6rem;
+  font-family: var(--primary-font);
+  background-color: var(--black-light);
+}
