@@ -54,6 +54,10 @@ textarea::placeholder, input::placeholder{
     background-color: var(--purple-color);
     cursor: pointer;
 }
+.form-container button:disabled{
+    background-color: lightgray;
+    color: white;
+}
 .task-cards-container{
     padding: 1rem 5rem;
     display: flex;
