@@ -11,7 +11,7 @@ type Task = {
   created_at: string;
 };
 
-function UpdateTask() {
+function UpdateTaskSection() {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -100,4 +100,4 @@ function UpdateTask() {
   );
 }
 
-export default UpdateTask;
+export default UpdateTaskSection;

@@ -6,22 +6,24 @@ import { MdOutlinePendingActions } from "react-icons/md";
 import { Tooltip } from "react-tooltip";
 import { supabase } from "../../supabase-client";
 import { useState, useEffect, FormEvent } from "react";
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
 import "./Home.css";
 
 type Task = {
-    id: string;
-    title: string;
-    description: string;
-    completed: boolean;
-    created_at: string;
-  };
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  created_at: string;
+};
 
-interface TaskCardProps{
-    to:string
-    taskTitle:string
-    taskDescription:string
-    completed:boolean
+interface TaskCardProps {
+  id: string;
+  to: string;
+  taskTitle: string;
+  taskDescription: string;
+  completed: boolean;
+  onMarkTask: (id: string, completed: boolean) => void;
 }
 
 function Home() {
@@ -56,20 +58,19 @@ function FormSection() {
 
   async function handleAddTask(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     setIsLoading(true);
 
     const { error } = await supabase.from("Tasks").insert(newTask).single();
-
     setIsLoading(false);
 
     if (error) {
       console.log(error.message);
+      toast.error("Failed to add task");
       return;
     }
 
     setNewTask({ title: "", description: "", completed: false });
-    console.log(newTask);
+    toast.success("Task added!");
   }
 
   return (
@@ -78,24 +79,26 @@ function FormSection() {
 
       <h1 className="info-text">You have 0 remaining tasks</h1>
 
-      <form className="form-container" action="" onSubmit={handleAddTask}>
+      <form className="form-container" onSubmit={handleAddTask}>
         <input
           type="text"
-          placeholder="enter task title"
+          placeholder="Enter task title"
+          value={newTask.title}
           onChange={(e) => {
             setNewTask((prev) => ({ ...prev, title: e.target.value }));
           }}
         />
 
         <textarea
-          placeholder="enter task description"
+          placeholder="Enter task description"
+          value={newTask.description}
           onChange={(e) => {
             setNewTask((prev) => ({ ...prev, description: e.target.value }));
           }}
         ></textarea>
 
         <button className="add-task-button" disabled={isLoading}>
-          {isLoading ? "please wait" : "add task"}
+          {isLoading ? "Please wait..." : "Add Task"}
         </button>
       </form>
     </div>
@@ -119,7 +122,7 @@ function TaskCardsContainer() {
     setIsLoading(false);
 
     if (error) {
-      setError(error.message); 
+      setError(error.message);
       return;
     }
 
@@ -132,57 +135,90 @@ function TaskCardsContainer() {
     fetchTasks();
   }, []);
 
-  {isLoading && <h1>Loading...</h1>}
+  async function handleMarkTask(id: string, completed: boolean) {
+    const { error } = await supabase
+      .from("Tasks")
+      .update({ completed: !completed })
+      .eq("id", id)
+      .single();
 
-  {error && <h1>{error}</h1>}
-
-  {tasks.length===0 && <h1>No remaining tasks</h1>}
-
-  if(tasks.length > 0) {
-    return(
-        <div className="task-cards-container">
-        <div className="task-cards-title-btn">
-          <h2 className="task-cards-title">my tasks</h2>
-          <button className="task-cards-button">
-            <RiDeleteBin6Line />
-            clear completed tasks
-          </button>
-        </div>
-  
-        <div className="task-cards">
-            {
-                tasks.map(item => <TaskCard to={`update-task/${item.id}`} taskTitle={item.title} taskDescription={item.description} completed={item.completed} />)
-            }
-        </div>
-      </div>
-    )
+    if (!error) {
+      toast.success(`Task marked as ${completed ? "pending" : "complete"}`);
+      fetchTasks();
+    } else {
+      console.log(error.message);
+      toast.error("Failed to update task");
+    }
   }
 
+  if (isLoading) return <h1>Loading...</h1>;
+  if (error) return <h1>{error}</h1>;
+  if (tasks.length === 0) return <h1>No remaining tasks</h1>;
+
+  return (
+    <div className="task-cards-container">
+      <div className="task-cards-title-btn">
+        <h2 className="task-cards-title">My Tasks</h2>
+        <button className="task-cards-button">
+          <RiDeleteBin6Line />
+          Clear completed tasks
+        </button>
+      </div>
+
+      <div className="task-cards">
+        {tasks.map((item) => (
+          <TaskCard
+            key={item.id}
+            id={item.id}
+            to={`update-task/${item.id}`}
+            taskTitle={item.title}
+            taskDescription={item.description}
+            completed={item.completed}
+            onMarkTask={handleMarkTask}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
-function TaskCard({to, taskTitle, taskDescription, completed} : TaskCardProps) {
+function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask }: TaskCardProps) {
   return (
     <div className="task-card">
       <div className="task-card-title-buttons">
-        <h3 className={completed ? "task-card-title-complete" : "task-card-title"}>{taskTitle}</h3>
+        <h3 className={completed ? "task-card-title-complete" : "task-card-title"}>
+          {taskTitle}
+        </h3>
 
         <div className="task-card-buttons">
           <Link to={to}>
             <CiEdit
               data-tooltip-id="my-tooltip"
-              data-tooltip-content="edit task"
+              data-tooltip-content="Edit task"
               className="edit-svg"
             />
           </Link>
 
-          <button>
-          {completed ? <MdOutlinePendingActions data-tooltip-id="my-tooltip" data-tooltip-content="mark as pending" className="pending-svg" /> : <GiCheckMark data-tooltip-id="my-tooltip" data-tooltip-content="mark as complete" className="check-svg" />}
+          <button onClick={() => onMarkTask(id, completed)}>
+            {completed ? (
+              <MdOutlinePendingActions
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Mark as pending"
+                className="pending-svg"
+              />
+            ) : (
+              <GiCheckMark
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Mark as complete"
+                className="check-svg"
+              />
+            )}
           </button>
 
           <button>
             <RiDeleteBin6Line
               data-tooltip-id="my-tooltip"
-              data-tooltip-content="delete task"
+              data-tooltip-content="Delete task"
               className="delete-svg"
             />
           </button>
@@ -192,11 +228,19 @@ function TaskCard({to, taskTitle, taskDescription, completed} : TaskCardProps) {
       </div>
 
       <div className="status">
-      <p>status: <span className={completed ? "span-complete" : "span-incomplete"}>{completed? "complete" : "pending"}</span></p>
+        <p>
+          Status:{" "}
+          <span className={completed ? "span-complete" : "span-incomplete"}>
+            {completed ? "Complete" : "Pending"}
+          </span>
+        </p>
       </div>
 
-      <p className={completed ? "description-complete" : "description-incomplete"}>{taskDescription}</p>
+      <p className={completed ? "description-complete" : "description-incomplete"}>
+        {taskDescription}
+      </p>
     </div>
   );
 }
+
 export default Home;
