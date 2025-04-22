@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { supabase } from "../../supabase-client";
 import ScaleLoader from "react-spinners/ScaleLoader";
-import "./updateTask.css";
+import "./UpdateTask.css";
 
 function UpdateTaskSection() {
   const { taskId } = useParams();
