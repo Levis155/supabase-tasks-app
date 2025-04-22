@@ -9,13 +9,23 @@ import { useState, useEffect, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
 
-type Task = {
+interface Task {
   id: string;
   title: string;
   description: string;
   completed: boolean;
   created_at: string;
 };
+
+interface FormSectionProps {
+  fetchTasks: () => Promise<void>;
+}
+interface TaskCardsContainerProps {
+  fetchTasks: () => Promise<void>;
+  fetchTasksLoading: boolean;
+  fetchTasksError: string | null;
+  tasks: Task[];
+}
 
 interface TaskCardProps {
   id: string;
@@ -24,9 +34,37 @@ interface TaskCardProps {
   taskDescription: string;
   completed: boolean;
   onMarkTask: (id: string, completed: boolean) => void;
+  onDeleteTask: (id:string) => void;
 }
 
 function Home() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [fetchTasksLoading, setFetchTasksLoading] = useState(false);
+  const [fetchTasksError, setFetchTasksError] = useState<string | null>(null);
+
+  async function fetchTasks() {
+    setFetchTasksLoading(true);
+    setFetchTasksError(null);
+
+    const { data, error } = await supabase
+      .from("Tasks")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    setFetchTasksLoading(false);
+
+    if(error) {
+      setFetchTasksError(error.message);
+      return;
+    }
+
+    setTasks(data);
+  }
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+  
   return (
     <>
       <ToastContainer
@@ -42,40 +80,40 @@ function Home() {
         theme="colored"
       />
 
-      <FormSection />
-      <TaskCardsContainer />
+      <FormSection fetchTasks={fetchTasks} />
+      <TaskCardsContainer fetchTasks={fetchTasks} fetchTasksLoading={fetchTasksLoading} fetchTasksError={fetchTasksError} tasks={tasks} />
     </>
   );
 }
 
-function FormSection() {
+function FormSection({fetchTasks}:FormSectionProps) {
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
     completed: false,
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [addTaskLoading, setAddTaskLoading] = useState(false);
 
   async function handleAddTask(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsLoading(true);
+    setAddTaskLoading(true);
 
     const { error } = await supabase.from("Tasks").insert(newTask).single();
-    setIsLoading(false);
+    setAddTaskLoading(false);
 
     if (error) {
-      console.log(error.message);
       toast.error("Failed to add task");
       return;
     }
 
     setNewTask({ title: "", description: "", completed: false });
+    fetchTasks()
     toast.success("Task added!");
   }
 
   return (
     <div className="intro-section">
-      <h2 className="greeting-text">Hello Levis 👋🏾</h2>
+      <h2 className="greeting-text">Hello 👋🏾</h2>
 
       <h1 className="info-text">You have 0 remaining tasks</h1>
 
@@ -97,43 +135,16 @@ function FormSection() {
           }}
         ></textarea>
 
-        <button className="add-task-button" disabled={isLoading}>
-          {isLoading ? "Please wait..." : "Add Task"}
+        <button className="add-task-button" disabled={addTaskLoading}>
+          {addTaskLoading ? "Please wait..." : "Add Task"}
         </button>
       </form>
     </div>
   );
 }
 
-function TaskCardsContainer() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function TaskCardsContainer({fetchTasks, fetchTasksLoading, fetchTasksError, tasks}:TaskCardsContainerProps) {
 
-  async function fetchTasks() {
-    setIsLoading(true);
-    setError(null);
-
-    const { data, error } = await supabase
-      .from("Tasks")
-      .select("*")
-      .order("created_at", { ascending: true });
-
-    setIsLoading(false);
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    if (data) {
-      setTasks(data);
-    }
-  }
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   async function handleMarkTask(id: string, completed: boolean) {
     const { error } = await supabase
@@ -142,26 +153,50 @@ function TaskCardsContainer() {
       .eq("id", id)
       .single();
 
-    if (!error) {
+      if(error) {
+        toast.error("Failed to update task.");
+        return;
+      }
+
       toast.success(`Task marked as ${completed ? "pending" : "complete"}`);
       fetchTasks();
-    } else {
-      console.log(error.message);
-      toast.error("Failed to update task");
-    }
   }
 
-  if (isLoading) return <h1>Loading...</h1>;
-  if (error) return <h1>{error}</h1>;
+  async function handleDeleteTask(id:string) {
+    const {error} = await supabase.from("Tasks").delete().eq("id", id).single()
+
+
+    if(error) {
+      toast.error("Failed to delete task.");
+      return;
+    }
+
+    toast.success("Task deleted successfully.")
+    fetchTasks();
+  }
+
+  async function handleClearCompleteTasks() {
+    const {error} = await supabase.from("Tasks").delete().eq("completed", true)
+
+    if(error){
+      toast.error("Failed to delete complete todos.");
+      return;
+    }
+    toast.success("Complete todos cleared successfully.")
+    fetchTasks();
+  }
+
+  if (fetchTasksLoading) return <h1>Loading...</h1>;
+  if (fetchTasksError) return <h1>{fetchTasksError}</h1>;
   if (tasks.length === 0) return <h1>No remaining tasks</h1>;
 
   return (
     <div className="task-cards-container">
       <div className="task-cards-title-btn">
         <h2 className="task-cards-title">My Tasks</h2>
-        <button className="task-cards-button">
+        <button className="task-cards-button" onClick={handleClearCompleteTasks}>
           <RiDeleteBin6Line />
-          Clear completed tasks
+          Clear complete tasks
         </button>
       </div>
 
@@ -175,6 +210,7 @@ function TaskCardsContainer() {
             taskDescription={item.description}
             completed={item.completed}
             onMarkTask={handleMarkTask}
+            onDeleteTask={handleDeleteTask}
           />
         ))}
       </div>
@@ -182,7 +218,7 @@ function TaskCardsContainer() {
   );
 }
 
-function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask }: TaskCardProps) {
+function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask, onDeleteTask }: TaskCardProps) {
   return (
     <div className="task-card">
       <div className="task-card-title-buttons">
@@ -215,7 +251,7 @@ function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask }:
             )}
           </button>
 
-          <button>
+          <button onClick={() => {onDeleteTask(id)}}>
             <RiDeleteBin6Line
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Delete task"
