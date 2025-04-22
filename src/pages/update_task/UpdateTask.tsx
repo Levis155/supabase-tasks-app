@@ -1,26 +1,19 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 import { supabase } from "../../supabase-client";
+import ScaleLoader from "react-spinners/ScaleLoader";
 import "./updateTask.css";
-
-type Task = {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  created_at: string;
-};
 
 function UpdateTaskSection() {
   const { taskId } = useParams();
-  const navigate = useNavigate();
   const [fetchLoading, setFetchLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [task, setTask] = useState<Task | null>(null);
   const [updatedTitle, setUpdatedTitle] = useState("");
   const [updatedDescription, setUpdatedDescription] = useState("");
+
+  const navigate = useNavigate();
 
   async function fetchTask() {
     setFetchError(null);
@@ -40,7 +33,6 @@ function UpdateTaskSection() {
     }
 
     if (data) {
-      setTask(data);
       setUpdatedTitle(data.title);
       setUpdatedDescription(data.description);
     }
@@ -48,7 +40,6 @@ function UpdateTaskSection() {
 
   async function handleSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSaveError(null);
     setSaveLoading(true);
 
     const { error } = await supabase
@@ -60,10 +51,10 @@ function UpdateTaskSection() {
     setSaveLoading(false);
 
     if (error) {
-      setSaveError(error.message);
+      toast.error("Failed to update task.");
       return;
     }
-
+    toast.success("Updated task successfully.");
     navigate("/");
   }
 
@@ -71,11 +62,33 @@ function UpdateTaskSection() {
     fetchTask();
   }, []);
 
-  if (fetchLoading) return <h1>Loading...</h1>;
-  if (fetchError) return <h1>{fetchError}</h1>;
+  if (fetchLoading)
+    return (
+      <div className="loader-container">
+        <ScaleLoader width={10} height={60} color="#8B8CB1" />
+      </div>
+    );
+  if (fetchError)
+    return (
+      <div className="info-container">
+        <h1>Something went wrong.</h1>;
+      </div>
+    );
 
   return (
     <div className="update-task-section">
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       <h1 className="update-task-title">Update Task Details</h1>
 
       <form className="edit-form-container" onSubmit={handleSave}>
@@ -83,13 +96,17 @@ function UpdateTaskSection() {
           type="text"
           placeholder="enter new task title"
           value={updatedTitle}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUpdatedTitle(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setUpdatedTitle(e.target.value)
+          }
         />
 
         <textarea
           placeholder="enter new task description"
           value={updatedDescription}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setUpdatedDescription(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            setUpdatedDescription(e.target.value)
+          }
         />
 
         <button className="save-task-button" disabled={saveLoading}>

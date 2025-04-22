@@ -58,6 +58,15 @@ textarea::placeholder, input::placeholder{
     background-color: lightgray;
     color: white;
 }
+.loader-container,.info-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40vh;
+}
+.info-container h1{
+    color: white;
+}
 .task-cards-container{
     padding: 1rem 5rem;
     display: flex;

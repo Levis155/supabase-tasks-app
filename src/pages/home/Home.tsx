@@ -7,6 +7,7 @@ import { Tooltip } from "react-tooltip";
 import { supabase } from "../../supabase-client";
 import { useState, useEffect, FormEvent } from "react";
 import { Link } from "react-router-dom";
+import ScaleLoader from "react-spinners/ScaleLoader";
 import "./Home.css";
 
 interface Task {
@@ -15,10 +16,11 @@ interface Task {
   description: string;
   completed: boolean;
   created_at: string;
-};
+}
 
 interface FormSectionProps {
   fetchTasks: () => Promise<void>;
+  tasksRemaining: number;
 }
 interface TaskCardsContainerProps {
   fetchTasks: () => Promise<void>;
@@ -34,13 +36,15 @@ interface TaskCardProps {
   taskDescription: string;
   completed: boolean;
   onMarkTask: (id: string, completed: boolean) => void;
-  onDeleteTask: (id:string) => void;
+  onDeleteTask: (id: string) => void;
 }
 
 function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [fetchTasksLoading, setFetchTasksLoading] = useState(false);
   const [fetchTasksError, setFetchTasksError] = useState<string | null>(null);
+  let tasksRemaining = tasks.length;
+
 
   async function fetchTasks() {
     setFetchTasksLoading(true);
@@ -53,7 +57,7 @@ function Home() {
 
     setFetchTasksLoading(false);
 
-    if(error) {
+    if (error) {
       setFetchTasksError(error.message);
       return;
     }
@@ -64,7 +68,7 @@ function Home() {
   useEffect(() => {
     fetchTasks();
   }, []);
-  
+
   return (
     <>
       <ToastContainer
@@ -80,13 +84,18 @@ function Home() {
         theme="colored"
       />
 
-      <FormSection fetchTasks={fetchTasks} />
-      <TaskCardsContainer fetchTasks={fetchTasks} fetchTasksLoading={fetchTasksLoading} fetchTasksError={fetchTasksError} tasks={tasks} />
+      <FormSection fetchTasks={fetchTasks} tasksRemaining={tasksRemaining}/>
+      <TaskCardsContainer
+        fetchTasks={fetchTasks}
+        fetchTasksLoading={fetchTasksLoading}
+        fetchTasksError={fetchTasksError}
+        tasks={tasks}
+      />
     </>
   );
 }
 
-function FormSection({fetchTasks}:FormSectionProps) {
+function FormSection({ fetchTasks, tasksRemaining }: FormSectionProps) {
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -107,15 +116,15 @@ function FormSection({fetchTasks}:FormSectionProps) {
     }
 
     setNewTask({ title: "", description: "", completed: false });
-    fetchTasks()
+    fetchTasks();
     toast.success("Task added!");
   }
 
   return (
     <div className="intro-section">
-      <h2 className="greeting-text">Hello 👋🏾</h2>
+      <h2 className="greeting-text">Hello Levis👋🏾</h2>
 
-      <h1 className="info-text">You have 0 remaining tasks</h1>
+      <h1 className="info-text">{`You have ${tasksRemaining} tasks remaining.`}</h1>
 
       <form className="form-container" onSubmit={handleAddTask}>
         <input
@@ -143,9 +152,12 @@ function FormSection({fetchTasks}:FormSectionProps) {
   );
 }
 
-function TaskCardsContainer({fetchTasks, fetchTasksLoading, fetchTasksError, tasks}:TaskCardsContainerProps) {
-
-
+function TaskCardsContainer({
+  fetchTasks,
+  fetchTasksLoading,
+  fetchTasksError,
+  tasks,
+}: TaskCardsContainerProps) {
   async function handleMarkTask(id: string, completed: boolean) {
     const { error } = await supabase
       .from("Tasks")
@@ -153,48 +165,72 @@ function TaskCardsContainer({fetchTasks, fetchTasksLoading, fetchTasksError, tas
       .eq("id", id)
       .single();
 
-      if(error) {
-        toast.error("Failed to update task.");
-        return;
-      }
+    if (error) {
+      toast.error("Failed to update task.");
+      return;
+    }
 
-      toast.success(`Task marked as ${completed ? "pending" : "complete"}`);
-      fetchTasks();
+    toast.success(`Task marked as ${completed ? "pending" : "complete"}`);
+    fetchTasks();
   }
 
-  async function handleDeleteTask(id:string) {
-    const {error} = await supabase.from("Tasks").delete().eq("id", id).single()
+  async function handleDeleteTask(id: string) {
+    const { error } = await supabase
+      .from("Tasks")
+      .delete()
+      .eq("id", id)
+      .single();
 
-
-    if(error) {
+    if (error) {
       toast.error("Failed to delete task.");
       return;
     }
 
-    toast.success("Task deleted successfully.")
+    toast.success("Task deleted successfully.");
     fetchTasks();
   }
 
   async function handleClearCompleteTasks() {
-    const {error} = await supabase.from("Tasks").delete().eq("completed", true)
+    const { error } = await supabase
+      .from("Tasks")
+      .delete()
+      .eq("completed", true);
 
-    if(error){
-      toast.error("Failed to delete complete todos.");
+    if (error) {
+      toast.error("Failed to delete complete tasks.");
       return;
     }
-    toast.success("Complete todos cleared successfully.")
+    toast.success("Complete tasks cleared successfully.");
     fetchTasks();
   }
 
-  if (fetchTasksLoading) return <h1>Loading...</h1>;
-  if (fetchTasksError) return <h1>{fetchTasksError}</h1>;
-  if (tasks.length === 0) return <h1>No remaining tasks</h1>;
+  if (fetchTasksLoading)
+    return (
+      <div className="loader-container">
+        <ScaleLoader width={10} height={60} color="#8B8CB1" />
+      </div>
+    );
+  if (fetchTasksError)
+    return (
+      <div className="info-container">
+        <h1>Something went wrong.</h1>;
+      </div>
+    );
+  if (tasks.length === 0)
+    return (
+      <div className="info-container">
+        <h1>No pending tasks.</h1>;
+      </div>
+    );
 
   return (
     <div className="task-cards-container">
       <div className="task-cards-title-btn">
         <h2 className="task-cards-title">My Tasks</h2>
-        <button className="task-cards-button" onClick={handleClearCompleteTasks}>
+        <button
+          className="task-cards-button"
+          onClick={handleClearCompleteTasks}
+        >
           <RiDeleteBin6Line />
           Clear complete tasks
         </button>
@@ -218,11 +254,21 @@ function TaskCardsContainer({fetchTasks, fetchTasksLoading, fetchTasksError, tas
   );
 }
 
-function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask, onDeleteTask }: TaskCardProps) {
+function TaskCard({
+  id,
+  to,
+  taskTitle,
+  taskDescription,
+  completed,
+  onMarkTask,
+  onDeleteTask,
+}: TaskCardProps) {
   return (
     <div className="task-card">
       <div className="task-card-title-buttons">
-        <h3 className={completed ? "task-card-title-complete" : "task-card-title"}>
+        <h3
+          className={completed ? "task-card-title-complete" : "task-card-title"}
+        >
           {taskTitle}
         </h3>
 
@@ -251,7 +297,11 @@ function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask, o
             )}
           </button>
 
-          <button onClick={() => {onDeleteTask(id)}}>
+          <button
+            onClick={() => {
+              onDeleteTask(id);
+            }}
+          >
             <RiDeleteBin6Line
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Delete task"
@@ -272,7 +322,11 @@ function TaskCard({ id, to, taskTitle, taskDescription, completed, onMarkTask, o
         </p>
       </div>
 
-      <p className={completed ? "description-complete" : "description-incomplete"}>
+      <p
+        className={
+          completed ? "description-complete" : "description-incomplete"
+        }
+      >
         {taskDescription}
       </p>
     </div>
